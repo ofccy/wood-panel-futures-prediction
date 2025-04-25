@@ -1,6 +1,6 @@
 # Wood-based Panel Futures Price Prediction
 
-[![DOI](https://zenodo.org/badge/DOI/10.xxxx/zenodo.xxxxxxx.svg)](https://doi.org/10.xxxx/zenodo.xxxxxxx)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15279317.svg)](https://doi.org/10.5281/zenodo.15279317)
 
 ## Overview
 
