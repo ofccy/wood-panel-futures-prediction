@@ -68,7 +68,7 @@ def analyze_price_characteristics(daily_df, monthly_df):
     # 1. Trend and Cyclical Analysis
     def analyze_trend_cycle(prices):
         # HP filter decomposition
-        cycle, trend = sm.tsa.filters.hpfilter(prices, lamb=1600)
+        cycle, trend = sm.tsa.filters.hpfilter(prices, lamb=10000)
 
         # Calculate cyclical characteristics
         acf_values = acf(cycle, nlags=30)
@@ -204,32 +204,43 @@ def plot_results(results, save_path=None):
     # Use matplotlib default style
     plt.style.use('default')
 
+
+    plt.rcParams.update({'font.size': 12})
+
     # 1. Trend and Cycle Decomposition
-    plt.figure(figsize=(10, 6))
+    plt.figure(figsize=(9, 5))
     if 'trend_cycle' in results and results['trend_cycle'] is not None:
-        plt.plot(results['trend_cycle']['trend'], label='Trend', color='blue', linewidth=2)
-        plt.plot(results['trend_cycle']['cycle'], label='Cycle', color='red', alpha=0.6)
-        plt.title('Price Trend and Cycle Decomposition')
-        plt.legend(loc='best')
+        plt.plot(results['trend_cycle']['trend'], label='Long-term Trend Component', color='blue', linewidth=2)
+        plt.plot(results['trend_cycle']['cycle'], label='Cyclical and Irregular Component', color='red', alpha=0.6)
+        plt.title('Wood-based Panel Futures Price Decomposition (HP Filter, λ=10000)')
+        plt.xlabel('Date', fontsize=12)
+        plt.ylabel('Price (Yuan/m³)', fontsize=12) 
+        plt.legend(loc='best', fontsize=12)
         plt.grid(True, linestyle='--', alpha=0.7)
+        plt.xticks(fontsize=10)  
+        plt.yticks(fontsize=10)
         if save_path:
             plt.savefig(save_path + '_trend_cycle.png', dpi=300, bbox_inches='tight')
     plt.show()
 
     # 2. Conditional Volatility
-    plt.figure(figsize=(10, 6))
+    plt.figure(figsize=(7, 4))
     if 'volatility' in results and results['volatility'] is not None:
         vol_clustering = results['volatility'].get('volatility_clustering', np.nan)
         plt.plot(results['volatility']['conditional_volatility'],
                  color='green', linewidth=2)
         plt.title(f'Conditional Volatility\n(Clustering Coefficient: {vol_clustering:.3f})')
+        plt.xlabel('Date')
+        plt.ylabel('Volatility (Standard Deviation)', fontsize=12)  
         plt.grid(True, linestyle='--', alpha=0.7)
+        plt.xticks(fontsize=10)
+        plt.yticks(fontsize=10)
         if save_path:
             plt.savefig(save_path + '_volatility.png', dpi=300, bbox_inches='tight')
     plt.show()
 
     # 3. Lagged Correlation Coefficients
-    plt.figure(figsize=(8, 4))  # Much smaller figure
+    plt.figure(figsize=(7,4))  # Much smaller figure
     if 'correlation' in results and results['correlation'] is not None:
         lag_corr = results['correlation']['lag_correlations']
         colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728']
@@ -241,12 +252,13 @@ def plot_results(results, save_path=None):
                 plt.plot(np.arange(len(corrs))[mask], corrs[mask],
                          label=feature, marker='o', color=color,
                          markersize=5, linewidth=1.5)
-        plt.title('Lagged Correlation Coefficients', fontsize=10)
-        plt.xlabel('Lag Period', fontsize=8)
-        plt.ylabel('Correlation', fontsize=8)
+        plt.title('Lagged Correlation Coefficients', fontsize=14)
+        plt.xlabel('Lag Period (Months)', fontsize=12)
+        plt.ylabel('Correlation Coefficient', fontsize=12)
         plt.grid(True, linestyle='--', alpha=0.5)
-        plt.legend(fontsize=7, loc='center left', bbox_to_anchor=(1.05, 0.5))
-        plt.subplots_adjust(right=0.75)  # Make room for legend
+        plt.legend(fontsize=10, loc='upper right', bbox_to_anchor=(1.0, 0.85))
+        plt.xticks(fontsize=10)
+        plt.yticks(fontsize=10)
         plt.tight_layout()
         if save_path:
             plt.savefig(save_path + '_correlation.png', dpi=300, bbox_inches='tight')
