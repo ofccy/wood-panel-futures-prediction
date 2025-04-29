@@ -7,34 +7,34 @@ warnings.filterwarnings('ignore')
 
 
 
-# 读取数据
+# Read data
 day_data = pd.read_csv('data/day.csv')
 month_data = pd.read_csv('data/month.csv')
 
-# 日频数据转月频
+# Convert daily frequency data to monthly frequency
 day_data['Date'] = pd.to_datetime(day_data['Date'])
 day_data['YearMonth'] = day_data['Date'].dt.to_period('M')
 monthly_avg_price = day_data.groupby('YearMonth')['Price'].mean().reset_index()
 monthly_avg_price['YearMonth'] = monthly_avg_price['YearMonth'].astype(str).str.replace('-', '')
 
-# 修改月度数据的日期格式
+# Modify date format of monthly data
 month_data['Date'] = month_data['Date'].astype(str)
 
-# 合并数据
+# Merge data
 merged_data = pd.merge(monthly_avg_price, month_data,
                        left_on='YearMonth',
                        right_on='Date',
                        how='inner')
 
 
-# 弹性系数计算函数（协方差/方差法）
+# Elasticity coefficient calculation function (covariance/variance method)
 def calculate_elasticity(x, y):
-    # 计算协方差
+    # Calculate covariance
     cov_xy = np.cov(x, y)[0, 1]
-    # 计算x的方差
+    # Calculate variance of x
     var_x = np.var(x)
 
-    # 计算弹性系数
+    # Calculate elasticity coefficient
     if var_x != 0:
         elasticity = cov_xy / var_x
     else:
@@ -43,7 +43,7 @@ def calculate_elasticity(x, y):
     return elasticity
 
 
-# 计算全样本期弹性系数
+# Calculate full sample period elasticity coefficients
 columns = ['Timber Price Index', 'Chemical Raw Materials Price Index',
            'Energy Price Index', 'NHPI']
 
@@ -54,13 +54,13 @@ for col in columns:
         merged_data['Price']
     )
 
-# 打印全样本期弹性系数
+# Print full sample period elasticity results
 print("Full Sample Elasticity Results:")
 for col, elasticity in full_sample_elasticities.items():
     print(f"{col}: {elasticity}")
 
 
-# 移动窗口弹性系数分析
+# Moving window elasticity coefficient analysis
 def calculate_moving_window_elasticities(data, window_size=12):
     results = []
 
@@ -83,15 +83,15 @@ def calculate_moving_window_elasticities(data, window_size=12):
     return pd.DataFrame(results)
 
 
-# 定义市场阶段
+# Define market phases
 def define_market_phases(data):
-    # 计算20日移动平均线
+    # Calculate 20-day moving average line
     data['MA20'] = data['Price'].rolling(window=20).mean()
 
-    # 计算价格变化率
+    # Calculate price change rate
     data['Price_Change_Rate'] = data['Price'].pct_change()
 
-    # 定义市场阶段
+    # Define market phases
     def classify_phase(row):
         if row['Price_Change_Rate'] > 0.05:
             return 'Upward'
@@ -105,11 +105,11 @@ def define_market_phases(data):
     return data
 
 
-# 在合并数据上添加市场阶段
+# Add market phases to merged data
 merged_data = define_market_phases(merged_data)
 
 
-# 计算不同市场阶段的边际效应
+# Calculate marginal effects for different market phases
 def calculate_phase_elasticities(data):
     phases = ['Upward', 'Downward', 'Stable']
     columns = ['Timber Price Index', 'Chemical Raw Materials Price Index',
@@ -131,18 +131,18 @@ def calculate_phase_elasticities(data):
     return phase_elasticities
 
 
-# 计算移动窗口弹性系数
+# Calculate moving window elasticity coefficients
 moving_elasticities = calculate_moving_window_elasticities(merged_data)
 phase_elasticities = calculate_phase_elasticities(merged_data)
 
-# 打印不同市场阶段的边际效应
+# Print marginal effects for different market phases
 print("Market Phase Elasticities:")
 for phase, elasticities in phase_elasticities.items():
     print(f"\n{phase} Phase:")
     for factor, elasticity in elasticities.items():
         print(f"{factor}: {elasticity}")
 
-# 可视化移动窗口弹性系数
+# Visualize moving window elasticity coefficients
 moving_elasticities['Period'] = pd.to_datetime(moving_elasticities['Period'], format='%Y%m')
 
 plt.figure(figsize=(9, 5))
@@ -154,7 +154,7 @@ plt.plot(moving_elasticities['Period'], moving_elasticities['NHPI'], label='NHPI
 
 plt.title('Dynamic Evolution of Supply Chain Factors\' Marginal Elasticity', fontsize=14)
 plt.xlabel('Date', fontsize=12)
-plt.ylabel('Elasticity Coefficient', fontsize=12)  # 添加了单位描述
+plt.ylabel('Elasticity Coefficient', fontsize=12)  # Added unit description
 plt.legend(fontsize=10)
 
 plt.gca().xaxis.set_major_locator(mdates.AutoDateLocator())
@@ -162,10 +162,10 @@ plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
 plt.xticks(rotation=45, fontsize=10)
 plt.yticks(fontsize=10)
 
-# 添加一条水平参考线表示零值
+# Add a horizontal reference line indicating zero value
 plt.axhline(y=0, color='gray', linestyle='--', alpha=0.7)
 
-# 增加网格便于阅读
+# Add grid for easier reading
 plt.grid(True, linestyle='--', alpha=0.5)
 
 plt.tight_layout()
